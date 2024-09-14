@@ -45,8 +45,8 @@ function createChart(data, index) {
             data: {
                 labels: ['Used', 'Remaining'],
                 datasets: [{
-                    data: [usage, limit - usage],
-                    backgroundColor: ['#FF6384', '#36A2EB']
+                    data: [Math.min(usage, limit), Math.max(0, limit - usage)],
+                    backgroundColor: [usage > limit ? '#FF0000' : '#FF6384', '#36A2EB']
                 }]
             },
             options: {
@@ -55,7 +55,21 @@ function createChart(data, index) {
                 plugins: {
                     title: {
                         display: true,
-                        text: `${name} (Reset: Day ${resetDay})`
+                        text: `${name} (Reset: Day ${resetDay})${usage > limit ? ' - Exceeded' : ''}`
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += `${context.parsed.toFixed(2)} GB`;
+                                }
+                                return label;
+                            }
+                        }
                     }
                 }
             }
