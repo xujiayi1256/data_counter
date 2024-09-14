@@ -1,10 +1,13 @@
 async function fetchData() {
     try {
+        console.log("Fetching data...");
         const response = await fetch('bandwidth_data.json');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return await response.json();
+        const data = await response.json();
+        console.log("Fetched data:", data);
+        return data;
     } catch (error) {
         console.error("Could not fetch data:", error);
         return [];
