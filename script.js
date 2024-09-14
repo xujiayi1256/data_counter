@@ -6,7 +6,7 @@ async function fetchData() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log("Fetched data:", data);
+        console.log("Fetched data:", JSON.stringify(data, null, 2));
         return data;
     } catch (error) {
         console.error("Could not fetch data:", error);
@@ -15,37 +15,42 @@ async function fetchData() {
 }
 
 function createChart(data, index) {
-    const limit = data.monthly_bw_limit_b / 1e9;
-    const usage = data.bw_counter_b / 1e9;
-    const resetDay = data.bw_reset_day_of_month;
-    const name = data.name;
+    try {
+        console.log(`Creating chart for data:`, JSON.stringify(data, null, 2));
+        const limit = data.monthly_bw_limit_b / 1e9;
+        const usage = data.bw_counter_b / 1e9;
+        const resetDay = data.bw_reset_day_of_month;
+        const name = data.name;
 
-    const canvas = document.createElement('canvas');
-    canvas.id = `chart-${index}`;
-    canvas.style.width = '300px';
-    canvas.style.height = '300px';
-    document.getElementById('charts-container').appendChild(canvas);
+        const canvas = document.createElement('canvas');
+        canvas.id = `chart-${index}`;
+        canvas.style.width = '300px';
+        canvas.style.height = '300px';
+        document.getElementById('charts-container').appendChild(canvas);
 
-    new Chart(canvas, {
-        type: 'pie',
-        data: {
-            labels: ['Used', 'Remaining'],
-            datasets: [{
-                data: [usage, limit - usage],
-                backgroundColor: ['#FF6384', '#36A2EB']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: `${name} - Reset Day: ${resetDay}`
+        new Chart(canvas, {
+            type: 'pie',
+            data: {
+                labels: ['Used', 'Remaining'],
+                datasets: [{
+                    data: [usage, limit - usage],
+                    backgroundColor: ['#FF6384', '#36A2EB']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `${name} - Reset Day: ${resetDay}`
+                    }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error(`Error creating chart for index ${index}:`, error);
+    }
 }
 
 async function init() {
