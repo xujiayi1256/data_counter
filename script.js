@@ -18,9 +18,12 @@ function createChart(data, index) {
     const limit = data.monthly_bw_limit_b / 1e9;
     const usage = data.bw_counter_b / 1e9;
     const resetDay = data.bw_reset_day_of_month;
+    const name = data.name;
 
     const canvas = document.createElement('canvas');
     canvas.id = `chart-${index}`;
+    canvas.style.width = '300px';
+    canvas.style.height = '300px';
     document.getElementById('charts-container').appendChild(canvas);
 
     new Chart(canvas, {
@@ -34,10 +37,11 @@ function createChart(data, index) {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 title: {
                     display: true,
-                    text: `Service ${index + 1} - Reset Day: ${resetDay}`
+                    text: `${name} - Reset Day: ${resetDay}`
                 }
             }
         }

@@ -21,6 +21,7 @@ jobs:
     - name: Update data
       env:
         API_URLS: ${{ secrets.API_URLS }}
+        API_NAMES: ${{ secrets.API_NAMES }}
       run: python update_data.py
     - name: Commit and push if changed
       env:
