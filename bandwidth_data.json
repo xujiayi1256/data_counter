@@ -1,19 +1,13 @@
 [
   {
-    "monthly_bw_limit_b": 500000000000,
-    "bw_counter_b": 70368701343,
-    "bw_reset_day_of_month": 13,
-    "name": "LA\u4e34\u65f6"
+    "monthly_bw_limit_b": 300000000000,
+    "bw_counter_b": 301044028126,
+    "bw_reset_day_of_month": 19,
+    "name": "HK 300"
   },
   {
     "monthly_bw_limit_b": 500000000000,
-    "bw_counter_b": 70368701343,
-    "bw_reset_day_of_month": 13,
-    "name": "LA\u4e34\u65f6"
-  },
-  {
-    "monthly_bw_limit_b": 500000000000,
-    "bw_counter_b": 70368701343,
+    "bw_counter_b": 82548623219,
     "bw_reset_day_of_month": 13,
     "name": "LA\u4e34\u65f6"
   }
