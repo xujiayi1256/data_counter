@@ -22,11 +22,15 @@ function createChart(data, index) {
         const resetDay = data.bw_reset_day_of_month;
         const name = data.name;
 
+        const chartContainer = document.createElement('div');
+        chartContainer.style.width = '300px';
+        chartContainer.style.height = '300px';
+        chartContainer.style.margin = '10px';
+
         const canvas = document.createElement('canvas');
         canvas.id = `chart-${index}`;
-        canvas.style.width = '300px';
-        canvas.style.height = '300px';
-        document.getElementById('charts-container').appendChild(canvas);
+        chartContainer.appendChild(canvas);
+        document.getElementById('charts-container').appendChild(chartContainer);
 
         console.log(`Canvas created with id: ${canvas.id}`);
 
@@ -51,7 +55,7 @@ function createChart(data, index) {
                 plugins: {
                     title: {
                         display: true,
-                        text: `${name} - Reset Day: ${resetDay}`
+                        text: `${name} (Reset: Day ${resetDay})`
                     }
                 }
             }
