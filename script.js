@@ -54,15 +54,20 @@ function createChart(data, index) {
 }
 
 async function init() {
-    const allData = await fetchData();
-    console.log("Fetched data:", allData);
-    if (allData.length === 0) {
-        document.getElementById('charts-container').innerHTML = '<p>No data available. Please check the console for errors.</p>';
-        return;
-    }
-    for (let i = 0; i < allData.length; i++) {
-        createChart(allData[i], i);
+    try {
+        const allData = await fetchData();
+        console.log("Fetched data:", allData);
+        if (allData.length === 0) {
+            document.getElementById('charts-container').innerHTML = '<p>No data available. Please check the console for errors.</p>';
+            return;
+        }
+        for (let i = 0; i < allData.length; i++) {
+            createChart(allData[i], i);
+        }
+    } catch (error) {
+        console.error("Error in init function:", error);
+        document.getElementById('charts-container').innerHTML = '<p>An error occurred. Please check the console for details.</p>';
     }
 }
 
-init();
+document.addEventListener('DOMContentLoaded', init);
