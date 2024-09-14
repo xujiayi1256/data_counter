@@ -25,7 +25,24 @@ with open('bandwidth_data.json', 'w') as f:
 
 print(f"Data saved to bandwidth_data.json: {data}")
 
-def check_usage_and_notify(data, user_key, api_token, threshold=0.9):
+def send_pushover_notification(user_key, api_token, message, url=None):
+    pushover_url = "https://api.pushover.net/1/messages.json"
+    data = {
+        "token": api_token,
+        "user": user_key,
+        "message": message
+    }
+    if url:
+        data["url"] = url
+        data["url_title"] = "Check Usage Online"
+    
+    req = Request(pushover_url, urlencode(data).encode())
+    try:
+        urlopen(req).read()
+    except Exception as e:
+        print(f"Error sending Pushover notification: {e}")
+
+def check_usage_and_notify(data, user_key, api_token, dashboard_url, threshold=0.9):
     for item in data:
         usage = item['bw_counter_b']
         limit = item['monthly_bw_limit_b']
@@ -33,22 +50,11 @@ def check_usage_and_notify(data, user_key, api_token, threshold=0.9):
         usage_percentage = usage / limit
         if usage_percentage >= threshold:
             message = f"Warning: {name} bandwidth usage is at {usage_percentage:.1%} of the limit!"
-            send_pushover_notification(user_key, api_token, message)
+            send_pushover_notification(user_key, api_token, message, dashboard_url)
 
-def send_pushover_notification(user_key, api_token, message):
-    url = "https://api.pushover.net/1/messages.json"
-    data = {
-        "token": api_token,
-        "user": user_key,
-        "message": message
-    }
-    req = Request(url, urlencode(data).encode())
-    try:
-        urlopen(req).read()
-    except Exception as e:
-        print(f"Error sending Pushover notification: {e}")
+dashboard_url = 'https://github.xujiayi.me/data_counter/'
 
 if pushover_user_key and pushover_api_token:
-    check_usage_and_notify(data, pushover_user_key, pushover_api_token)
+    check_usage_and_notify(data, pushover_user_key, pushover_api_token, dashboard_url)
 else:
     print("Pushover credentials not set. Skipping notifications.")
