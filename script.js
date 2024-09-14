@@ -28,7 +28,15 @@ function createChart(data, index) {
         canvas.style.height = '300px';
         document.getElementById('charts-container').appendChild(canvas);
 
-        new Chart(canvas, {
+        console.log(`Canvas created with id: ${canvas.id}`);
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            throw new Error('Unable to get 2D context for canvas');
+        }
+
+        console.log('Creating new Chart instance');
+        new Chart(ctx, {
             type: 'pie',
             data: {
                 labels: ['Used', 'Remaining'],
@@ -48,6 +56,7 @@ function createChart(data, index) {
                 }
             }
         });
+        console.log(`Chart created for index ${index}`);
     } catch (error) {
         console.error(`Error creating chart for index ${index}:`, error);
     }
