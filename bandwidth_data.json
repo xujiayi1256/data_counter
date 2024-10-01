@@ -7,13 +7,13 @@
   },
   {
     "monthly_bw_limit_b": 300000000000,
-    "bw_counter_b": 647262,
+    "bw_counter_b": 736137,
     "bw_reset_day_of_month": 19,
     "name": "HK 300"
   },
   {
     "monthly_bw_limit_b": 500000000000,
-    "bw_counter_b": 122064035658,
+    "bw_counter_b": 128258358468,
     "bw_reset_day_of_month": 13,
     "name": "LA\u4e34\u65f6"
   }
