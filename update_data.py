@@ -1,13 +1,19 @@
 import requests
 import json
 import os
-from urllib.parse import urlencode
-from urllib.request import Request, urlopen
 
-urls = os.environ['API_URLS'].split(',')
-names = os.environ['API_NAMES'].split(',')
-pushover_user_key = os.environ.get('PUSHOVER_USER_KEY')
-pushover_api_token = os.environ.get('PUSHOVER_API_TOKEN')
+urls = [u.strip() for u in os.environ['API_URLS'].split(',') if u.strip()]
+names = [n.strip() for n in os.environ['API_NAMES'].split(',') if n.strip()]
+if len(urls) != len(names):
+    print(
+        "WARNING: API_URLS has {} entries and API_NAMES has {} — they are paired in order; "
+        "fix your secrets so the counts match.".format(len(urls), len(names))
+    )
+
+bark_device_key = os.environ.get('BARK_DEVICE_KEY')
+_bark_server_env = (os.environ.get('BARK_SERVER') or '').strip()
+bark_server = (_bark_server_env or 'https://api.day.app').rstrip('/')
+ntfy_url = os.environ.get('NTFY_URL')
 
 data = []
 for url, name in zip(urls, names):
@@ -18,43 +24,79 @@ for url, name in zip(urls, names):
         json_data['name'] = name.strip()
         data.append(json_data)
     except requests.RequestException as e:
-        print(f"Error fetching data from {url}: {e}")
+        print("Error fetching data from {}: {}".format(url, e))
 
 with open('bandwidth_data.json', 'w') as f:
     json.dump(data, f, indent=2)
 
-print(f"Data saved to bandwidth_data.json: {data}")
+print("Data saved to bandwidth_data.json: {}".format(data))
 
-def send_pushover_notification(user_key, api_token, message, url=None):
-    pushover_url = "https://api.pushover.net/1/messages.json"
-    data = {
-        "token": api_token,
-        "user": user_key,
-        "message": message
+
+def send_bark_notification(device_key, server_base, message, click_url=None):
+    """Bark JSON API: POST {server}/push with device_key, title, body, optional url."""
+    push_url = '{}/push'.format(server_base)
+    payload = {
+        'device_key': device_key.strip(),
+        'title': 'Bandwidth alert',
+        'body': message,
     }
-    if url:
-        data["url"] = url
-        data["url_title"] = "Check Usage Online"
-    
-    req = Request(pushover_url, urlencode(data).encode())
+    if click_url:
+        payload['url'] = click_url
     try:
-        urlopen(req).read()
-    except Exception as e:
-        print(f"Error sending Pushover notification: {e}")
+        r = requests.post(push_url, json=payload, timeout=30)
+        r.raise_for_status()
+    except requests.RequestException as e:
+        print("Error sending Bark notification: {}".format(e))
 
-def check_usage_and_notify(data, user_key, api_token, dashboard_url, threshold=0.9):
+
+def send_ntfy_notification(topic_url, message, click_url=None):
+    """POST body = message. topic_url is e.g. https://ntfy.sh/your-secret-topic"""
+    headers = {'Title': 'Bandwidth alert'}
+    if click_url:
+        headers['Click'] = click_url
+    try:
+        r = requests.post(
+            topic_url.strip(),
+            data=message.encode('utf-8'),
+            headers=headers,
+            timeout=30,
+        )
+        r.raise_for_status()
+    except requests.RequestException as e:
+        print("Error sending ntfy notification: {}".format(e))
+
+
+def send_bandwidth_alert(message, dashboard_url=None):
+    # Order: Bark first, then ntfy
+    if bark_device_key:
+        send_bark_notification(bark_device_key, bark_server, message, dashboard_url)
+    if ntfy_url:
+        send_ntfy_notification(ntfy_url, message, dashboard_url)
+
+
+def any_notification_configured():
+    return bool(bark_device_key or ntfy_url)
+
+
+def check_usage_and_notify(data, dashboard_url, threshold=0.9):
     for item in data:
         usage = item['bw_counter_b']
         limit = item['monthly_bw_limit_b']
         name = item['name']
         usage_percentage = usage / limit
         if usage_percentage >= threshold:
-            message = f"Warning: {name} bandwidth usage is at {usage_percentage:.1%} of the limit!"
-            send_pushover_notification(user_key, api_token, message, dashboard_url)
+            message = "Warning: {} bandwidth usage is at {:.1%} of the limit!".format(
+                name, usage_percentage
+            )
+            send_bandwidth_alert(message, dashboard_url)
+
 
 dashboard_url = 'https://github.xujiayi.me/data_counter/'
 
-if pushover_user_key and pushover_api_token:
-    check_usage_and_notify(data, pushover_user_key, pushover_api_token, dashboard_url)
+if any_notification_configured():
+    check_usage_and_notify(data, dashboard_url)
 else:
-    print("Pushover credentials not set. Skipping notifications.")
+    print(
+        "No notification channels configured. Set BARK_DEVICE_KEY (and optionally "
+        "BARK_SERVER for self-hosted Bark), and/or NTFY_URL."
+    )
