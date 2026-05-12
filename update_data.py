@@ -32,6 +32,30 @@ with open('bandwidth_data.json', 'w') as f:
 print("Data saved to bandwidth_data.json: {}".format(data))
 
 
+def write_widgy_pie_csv(path, used_gb, remaining_gb):
+    """Two-column CSV for Widgy-style pie charts: label + numeric value."""
+    with open(path, 'w') as f:
+        f.write('Label,Value\n')
+        f.write('Used,{:.6f}\n'.format(used_gb))
+        f.write('Remaining,{:.6f}\n'.format(remaining_gb))
+
+
+_widgy_primary_written = False
+for idx, item in enumerate(data):
+    try:
+        used_b = float(item['bw_counter_b'])
+        lim_b = float(item['monthly_bw_limit_b'])
+    except (KeyError, TypeError, ValueError):
+        print('Skipping Widgy CSV for index {}: missing or invalid counters'.format(idx))
+        continue
+    used_gb = used_b / 1e9
+    remaining_gb = max(0.0, (lim_b - used_b) / 1e9)
+    write_widgy_pie_csv('widgy_bandwidth_{}.csv'.format(idx), used_gb, remaining_gb)
+    if not _widgy_primary_written:
+        write_widgy_pie_csv('widgy_bandwidth.csv', used_gb, remaining_gb)
+        _widgy_primary_written = True
+
+
 def send_bark_notification(device_key, server_base, message, click_url=None):
     """Bark JSON API: POST {server}/push with device_key, title, body, optional url."""
     push_url = '{}/push'.format(server_base)
